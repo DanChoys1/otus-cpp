@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - feature/github_actions
+      - zip_release
     tags:
       - ' *'
 jobs:
