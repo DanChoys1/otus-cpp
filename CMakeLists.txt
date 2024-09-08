@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
@@ -6,7 +6,7 @@ set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VESRION})
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
-option(WITH_GOOGLE_TEST "Whether to build Google test" OFF)
+option(WITH_GOOGLE_TEST "Whether to build Google test" ON)
 
 configure_file(version.h.in version.h)
 
@@ -47,23 +47,9 @@ if(WITH_BOOST_TEST)
 endif()
 
 if(WITH_GOOGLE_TEST)
-    # find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-    # add_executable(test_version test_version.cpp)
-
-    # set_target_properties(test_version PROPERTIES
-    #     CXX_STANDARD 14
-    #     CXX_STANDARD_REQUIRED ON
-    # )
-
-    # set_target_properties(test_version PROPERTIES
-    #     COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
-    #     INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR}
-    # )
-
-    # target_link_libraries(test_version
-    #     ${Boost_LIBRARIES}
-    #     helloworld
-    # )
+    find_package(GTest REQUIRED)
+    add_executable(gtest_version gtest_version.cpp)
+    target_link_libraries(gtest_version GTest::gtest GTest::gtest_main helloworld)
 endif()
 
 if (MSVC)
@@ -78,6 +64,11 @@ if (MSVC)
             /W4
         )
     endif()
+    if(WITH_GOOGLE_TEST)
+        target_compile_options(gtest_version PRIVATE
+            /W4
+        )
+    endif()
 else ()
     target_compile_options(helloworld_cli PRIVATE
         -Wall -Wextra -pedantic -Werror
@@ -87,6 +78,11 @@ else ()
     )
     if(WITH_BOOST_TEST)
         target_compile_options(test_version PRIVATE
+            -Wall -Wextra -pedantic -Werror
+        )
+    endif()
+    if(WITH_GOOGLE_TEST)
+        target_compile_options(gtest_version PRIVATE
             -Wall -Wextra -pedantic -Werror
         )
     endif()
@@ -104,4 +100,8 @@ include(CPack)
 if(WITH_BOOST_TEST)
     enable_testing()
     add_test(test_version test_version)
+endif()
+if(WITH_GOOGLE_TEST)
+    enable_testing()
+    add_test(gtest_version gtest_version)
 endif()
