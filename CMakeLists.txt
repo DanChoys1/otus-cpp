@@ -49,7 +49,7 @@ endif()
 if(WITH_GOOGLE_TEST)
     find_package(GTest REQUIRED)
     add_executable(gtest_version gtest_version.cpp)
-    target_link_libraries(gtest_version GTest::gtest GTest::gtest_main helloworld)
+    target_link_libraries(gtest_version GTest::gtest_main helloworld)
 endif()
 
 if (MSVC)
