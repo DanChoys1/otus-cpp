@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 
 project(ip_filter)
 
-option(WITH_GOOGLE_TEST "Whether to build Google test" OFF)
+option(WITH_GOOGLE_TEST "Whether to build Google test" ON)
 
-add_executable(ip_filter ip_filter.cpp)
+add_executable(ip_filter main.cpp ip_filter.h ip_filter.cpp)
 
 set_target_properties(ip_filter PROPERTIES
     CXX_STANDARD 17
@@ -13,8 +13,8 @@ set_target_properties(ip_filter PROPERTIES
 
 if(WITH_GOOGLE_TEST)
     find_package(GTest REQUIRED)
-    add_executable(gtest_ip_filter gtest_ip_filter.cpp)
-    target_link_libraries(gtest_ip_filter GTest::gtest_main helloworld)
+    add_executable(gtest_ip_filter gtest_ip_filter.cpp gtest_data.h ip_filter.h ip_filter.cpp)
+    target_link_libraries(gtest_ip_filter GTest::gtest_main)
 endif()
 
 if (MSVC)
