@@ -6,6 +6,7 @@ on:
       - github_actions
       - ip_filter
       - allocator
+      - print_ip
     tags:
       - '*'
 jobs:

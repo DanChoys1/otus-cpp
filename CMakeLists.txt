@@ -3,13 +3,13 @@ cmake_minimum_required(VERSION 3.20)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(allocator VERSION ${PROJECT_VESRION})
+project(print_ip VERSION ${PROJECT_VESRION})
 
 option(WITH_GOOGLE_TEST "Whether to build Google test" OFF)
 
-add_executable(allocator main.cpp)
+add_executable(print_ip main.cpp print_ip.h)
 
-set_target_properties(allocator PROPERTIES
+set_target_properties(print_ip PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
 )
@@ -21,7 +21,7 @@ if(WITH_GOOGLE_TEST)
 endif()
 
 if (MSVC)
-    target_compile_options(allocator PRIVATE
+    target_compile_options(print_ip PRIVATE
         /W4
     )
     if(WITH_GOOGLE_TEST)
@@ -30,7 +30,7 @@ if (MSVC)
         )
     endif()
 else ()
-    target_compile_options(allocator PRIVATE
+    target_compile_options(print_ip PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
     if(WITH_GOOGLE_TEST)
@@ -40,7 +40,7 @@ else ()
     endif()
 endif()
 
-install(TARGETS allocator RUNTIME DESTINATION bin)
+install(TARGETS print_ip RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_CONTACT example@example.com)
