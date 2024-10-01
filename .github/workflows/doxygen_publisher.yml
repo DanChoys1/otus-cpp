@@ -16,7 +16,7 @@ jobs:
       shell: bash
 
     - name: Generate Doxygen Documentation
-      run: doxygen
+      run: doxygen -g Doxyfile
       shell: bash
 
     # Build the HTML documentation
