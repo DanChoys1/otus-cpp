@@ -1,47 +1,32 @@
-name: Documentation generation CI
+name: Documentation
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
 on:
-    push:
-        branches: [ print_ip ]
+  push:
+    branches: [ master ]
+
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            # checkout print_ip
-            - uses: actions/checkout@v2
-            # generate the C++ doxygen files
-            - name: Doxygen Action C++
-              uses: mattnotmitt/doxygen-action@v1.3.1
-              with:
-                working-directory: '.'
-                doxyfile-path: 'doc/doxygen/DoxyfileCC'
- 
-                # store the doc files
-            - name: Upload Output Directory
-              uses: actions/upload-artifact@v2
-              with:
-                name: doc-files
-                path: doc
-                retention-days: 1
- 
-    copy:
-        runs-on: ubuntu-latest
-        needs: build
-        steps:
-            # checkout the gh-pages branch
-            - uses: actions/checkout@v2
-              with:
-                ref: gh-pages
-            - name: Download Output Directory
-              uses: actions/download-artifact@v2
-              with:
-                name: doc-files
-                path: docDir
-                # add, commit and push to gh-pages
-            - name: Commit changes
-              uses: EndBug/add-and-commit@v7
-              with:
-                author_name: DanChoys1
-                author_email: some@mail.ru
-                message: 'Update docs'
-                branch: gh-pages
-                add: '["docDir/doxygen/CC/html/*"]'
+  build-documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    # Build the HTML documentation
+    - name: Doxygen Action
+      uses: mattnotmitt/doxygen-action@v1.1.0
+      with:
+          doxyfile-path: ./Doxyfile
+          working-directory: .
+    
+    # Deploy the HTML documentation to GitHub Pages
+    - name: GH Pages Deployment
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./doc/html/
+        enable_jekyll: false
+        allow_empty_commit: false
+        force_orphan: true
+        publish_branch: gh-pages
