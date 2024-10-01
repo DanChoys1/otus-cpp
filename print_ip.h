@@ -14,7 +14,7 @@ namespace
 constexpr char Delimetr = '.';
 }
 
-// integral type
+/// integral type
 template<typename IntegrT, class = enable_if_t<is_integral_v<IntegrT>>>
 void print_ip(const IntegrT val)
 {
@@ -32,24 +32,25 @@ void print_ip(const IntegrT val)
     cout << endl;
 }
 
-// string type helper
+
 template<class, class = void>
 struct HasCStrFunc : std::false_type {};
 template<class T>
 struct HasCStrFunc<T, std::void_t<decltype(printf("%s", std::declval<T>().c_str()))>> : std::true_type {};
 
+/// string type
 template<typename StrT, class = enable_if_t<HasCStrFunc<StrT>::value>>
 void print_ip(const StrT& str, int)
 {
     printf("%s\n", str.c_str());
 }
 
-// container type helper
 template<class, class = void>
 struct HasPrintableBegin : std::false_type {};
 template<class T>
 struct HasPrintableBegin<T, std::void_t<decltype(cout << (*std::declval<T>().begin()))>> : std::true_type {};
 
+/// container type
 template<typename ContainerT, class = enable_if_t<HasPrintableBegin<ContainerT>::value>>
 void print_ip(const ContainerT& con, long)
 {
@@ -74,13 +75,14 @@ void print_ip(const ConOrStrT& conOrStr)
     print_ip(conOrStr, int{});
 }
 
-// tuple type
+/// tuple type
 template<typename Type>
 void print_ip(const tuple<Type>& t)
 {        
     cout << get<0>(t) << endl;
 }
 
+/// tuple type
 template<size_t index = 0, typename Type1, typename ...Types, class = enable_if_t<conjunction_v<is_same<Type1, Types>...>>>
 void print_ip(const tuple<Type1, Types...>& t)
 {        
