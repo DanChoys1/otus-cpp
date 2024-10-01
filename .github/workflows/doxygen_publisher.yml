@@ -11,6 +11,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
+    - name: Install Doxygen
+      run: sudo apt-get install doxygen -y
+      shell: bash
+
+    - name: Generate Doxygen Documentation
+      run: doxygen
+      shell: bash
+
     # Build the HTML documentation
     - name: Doxygen Action
       uses: mattnotmitt/doxygen-action@v1.1.0
