@@ -2,7 +2,11 @@
 
 #include "print_ip.h"
 
-// Start
+/** \mainpage Main Page Text
+Some main page Text!!!
+*/
+
+/// Start
 int main()
 {
     print_ip( int8_t{-1} ); // 255
