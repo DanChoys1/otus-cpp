@@ -23,26 +23,25 @@ jobs:
                 path: doc
                 retention-days: 1
  
-        copy:
-            runs-on: ubuntu-latest
-            needs: build
-            steps:
-                # checkout the gh-pages branch
-                - uses: actions/checkout@v2
-                  with:
-                    ref: gh-pages
-                # download the doc files, most of which are generated above
-                - name: Download Output Directory
-                  uses: actions/download-artifact@v2
-                  with:
-                    name: doc-files
-                    path: docDir
+    copy:
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            # checkout the gh-pages branch
+            - uses: actions/checkout@v2
+              with:
+                ref: gh-pages
+            - name: Download Output Directory
+              uses: actions/download-artifact@v2
+              with:
+                name: doc-files
+                path: docDir
                 # add, commit and push to gh-pages
-                - name: Commit changes
-                  uses: EndBug/add-and-commit@v7
-                  with:
-                    author_name: DanChoys1
-                    author_email: some@mail.ru
-                    message: 'Update docs'
-                    branch: gh-pages
-                    add: '["docDir/doxygen/CC/html/*"]'
+            - name: Commit changes
+              uses: EndBug/add-and-commit@v7
+              with:
+                author_name: DanChoys1
+                author_email: some@mail.ru
+                message: 'Update docs'
+                branch: gh-pages
+                add: '["docDir/doxygen/CC/html/*"]'
