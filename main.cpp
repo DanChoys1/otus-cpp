@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "factorial.cpp"
+#include "factorial.h"
 #include "allocator.h"
 #include "myvector.h"
 

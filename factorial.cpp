@@ -1,3 +1,5 @@
+#include "factorial.h"
+
 int factorial(int n)
 {
     int res = 1;

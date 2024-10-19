@@ -8,7 +8,7 @@ class MyVector
 {
 public:
     using value_type = T;
-    
+
 public:
     MyVector() = default;
 
@@ -19,8 +19,8 @@ public:
         std::copy(values.begin(), values.end(), _data);
     }
 
-   ~MyVector() 
-   {
+    ~MyVector() 
+    {
         clear();
         std::allocator_traits<Allocator>::deallocate(_alloc, _data, _capacity);
     }
