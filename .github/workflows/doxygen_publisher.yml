@@ -12,8 +12,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install Doxygen
-        run: sudo apt-get install doxygen graphviz
+      - name: Install Doxygen and Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install doxygen graphviz -y
 
       - name: Generate Doxygen Documentation
         run: doxygen
