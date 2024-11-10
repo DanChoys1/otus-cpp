@@ -1,39 +1,12 @@
-#include <iostream>
-#include "matrix.h"
+#include "command_parser.h"
+#include "command_buffer.h"
+#include "command_logger.h"
 
-using namespace std;
-
-int main()
+int main(int argc, char* argv[])
 {    
-    Matrix<int, 0> matrix;
-    static constexpr size_t matrixSize = 10; 
-    for (size_t i = 0, j = matrixSize-1; i < matrixSize; ++i, --j)
-    {
-        matrix[i][i] = i;
-        matrix[i][j] = j;
-    }
-
-    for (size_t i = 1; i < matrixSize-1; ++i)
-    {
-        for (size_t j = 1; j < matrixSize-1; ++j)
-        {
-            cout << matrix[i][j] << " ";
-        }
-        cout << endl;
-    }
-
-    cout << matrix.size() << endl;
-
-    for(const auto& cell : matrix)
-    {
-        size_t i,j;
-        int v;
-        tie(i, j, v) = (tuple<size_t, size_t, int>)cell;
-        cout << i << " " << j << " " << v << endl;
-    }
-
-    // ((matrix[100][100] = 314) = 0) = 217;
-    // cout << "at matrix[100][100] = " << matrix[100][100] << endl;
+    int blockSize = argc > 1 ? atoi(argv[1]) : 1;
+    CommandsParser parser(std::make_shared<CommandBuffer>(std::make_shared<CommandLogger>()), blockSize);
+    parser.parse(std::cin);
 
     return 0;
 }
