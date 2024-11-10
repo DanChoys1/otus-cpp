@@ -104,10 +104,7 @@ public:
     {
         return _matrix.at(_rowIndex).size();
     }
-
-    cellIteratorType begin() { return _matrix.at(_rowIndex).begin(); }
-    cellIteratorType end() { return _matrix.at(_rowIndex).end(); }
-
+    
 private:
     MatrixRowHelper(size_t rowIndex, unordered_map<size_t, unordered_map<size_t, T>>& matrix) :
         _rowIndex(rowIndex), _matrix(matrix)
