@@ -63,7 +63,7 @@ private:
 private:
     std::shared_ptr<ICommandBuffer> _commBuff;
 
-    int _blockSize = 1;
+    size_t _blockSize = 1;
     int _dynamicBlocks = 0;
     
 };

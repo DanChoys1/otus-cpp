@@ -6,7 +6,7 @@
 class ICommandLogger
 { 
 public:
-    virtual ICommandLogger& start(std::string logName, time_t logtime)
+    virtual ICommandLogger& start([[maybe_unused]] std::string logName, [[maybe_unused]] time_t logTime)
     {
         /* Do nothing */ 
         return *this;
@@ -14,7 +14,7 @@ public:
 
     virtual void end() { /* Do nothing */ };
 
-    virtual ICommandLogger& operator<< (const Command& command) 
+    virtual ICommandLogger& operator<< ([[maybe_unused]] const Command& command) 
     {
         /* Do nothing */ 
         return *this;
