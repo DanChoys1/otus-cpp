@@ -17,7 +17,7 @@ public:
             return true;
             
         if (_outFile.is_open()) 
-            _outFile.close();
+            close();
 
         _filePath = path;
         _outFile.open(_filePath, std::ios_base::binary | std::ios_base::out);

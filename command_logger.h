@@ -5,8 +5,8 @@
 
 #include "command.h"
 #include "icommand_logger.h"
-#include "file_logger.h"
 #include "cmd_logger.h"
+#include "multithreading_file_logger.h"
 
 namespace
 {
@@ -56,7 +56,7 @@ public:
     }
 
 private:
-    FileLogger _fileLogger;
+    MultithreadingFileLogger _fileLogger;
     CmdLogger _cmdLogger;
     
     std::string _logName = "";
