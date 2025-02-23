@@ -5,8 +5,8 @@
 
 #include "command.h"
 #include "icommand_logger.h"
-#include "cmd_logger.h"
 #include "multithreading_file_logger.h"
+#include "multithreading_cmd_logger.h"
 
 namespace
 {
@@ -57,7 +57,7 @@ public:
 
 private:
     MultithreadingFileLogger _fileLogger;
-    CmdLogger _cmdLogger;
+    MultithreadingCmdLogger _cmdLogger;
     
     std::string _logName = "";
     time_t _logTime = 0;
