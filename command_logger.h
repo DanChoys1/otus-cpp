@@ -7,6 +7,7 @@
 #include "icommand_logger.h"
 #include "multithreading_file_logger.h"
 #include "multithreading_cmd_logger.h"
+#include "uuid_generator.h"
 
 namespace
 {
@@ -20,7 +21,7 @@ public:
     {
         _isFirstCommand = true;
         _logName = std::move(logName);
-        _logTime = logTime;
+        _logPostfix = std::to_string(logTime) + '_' + generateUUID();
 
         return *this;
     }
@@ -29,7 +30,7 @@ public:
     {
         _isFirstCommand = true;
         _logName.clear();
-        _logTime = 0;
+        _logPostfix.clear();
         _fileLogger.close();
 
         std::cout << std::endl;
@@ -42,7 +43,7 @@ public:
             _isFirstCommand = false;
 
             _cmdLogger << _logName << ": ";
-            _fileLogger.open(_logName + std::to_string(_logTime) + FileExtension);
+            _fileLogger.open(_logName + _logPostfix + FileExtension);
         }
         else
         {
@@ -61,6 +62,7 @@ private:
     
     std::string _logName = "";
     time_t _logTime = 0;
+    std::string _logPostfix;
 
     bool _isFirstCommand = true;
 };
