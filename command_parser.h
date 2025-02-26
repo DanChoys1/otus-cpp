@@ -25,8 +25,12 @@ public:
             else
                 newCommand(line);
         }
+    }
 
-        endParsing();
+    void endParsing()
+    {
+        if (_commBuff->count() > 0 && _dynamicBlocks == 0)
+            _commBuff->execut();
     }
 
 private:
@@ -51,12 +55,6 @@ private:
         Command command { move(line) };
         _commBuff->setCommand(command);
         if (_commBuff->count() == _blockSize && _dynamicBlocks == 0)
-            _commBuff->execut();
-    }
-
-    void endParsing()
-    {
-        if (_commBuff->count() > 0 && _dynamicBlocks == 0)
             _commBuff->execut();
     }
 

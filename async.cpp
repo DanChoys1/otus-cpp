@@ -12,31 +12,25 @@ public:
     Handler(std::size_t block_size)
     {
         parser = std::make_shared<CommandsParser>(std::make_shared<CommandBuffer>(std::make_shared<CommandLogger>()), block_size);
-        parserThread = std::thread([this]()
-        {
-            parser->parse(stream);
-        });
     }
 
     void receive(const char* data, std::size_t size)
     {
-        std::lock_guard lock(receiveMutex);
+        std::lock_guard lock(parseMutex);
+        std::stringstream stream;
         stream << std::string(data, size);
+        parser->parse(stream);
     }
 
     ~Handler()
     {
-        if (parserThread.joinable())
-            parserThread.join();
+        std::lock_guard lock(parseMutex);
+        parser->endParsing();
     }
 
 private:
     std::shared_ptr<CommandsParser> parser;
-    std::stringstream stream;
-
-    std::thread parserThread;
-
-    std::mutex receiveMutex;
+    std::mutex parseMutex;
 };
 
 handle_t connect(std::size_t block_size)

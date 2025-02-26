@@ -40,36 +40,35 @@ public:
     }
 
 protected:
-    bool logQueueClear()
+    bool isLogQueueClear()
     {
         return _logQueue.empty();
     }
 
+private:
     void processQueue()
     {
-        while (true)
-        {            
-            if (_logQueue.empty())
-                _queueClearCondition.notify_all();
-
+        while (!_isStop || !isLogQueueClear())
+        {
             std::unique_lock lock(_queueMutex);
-            _queueCondition.wait(lock, [this] { return !_logQueue.empty() || _stop; });
+            _queueCondition.wait(lock, [this] { return !isLogQueueClear() || _isStop; });
 
-            if (!_logQueue.empty())
+            if (!isLogQueueClear())
             {
                 _logger << _logQueue.front();
                 _logQueue.pop();
             }
-            else if (_stop)
+            
+            if (isLogQueueClear())
             {
-                break;
+                _queueClearCondition.notify_all();
             }
         }
     }
 
     void stop()
     {
-        _stop = true;
+        _isStop = true;
         _queueCondition.notify_all();
         for (auto& worker : _workers)
         {
@@ -79,16 +78,16 @@ protected:
     }
 
 protected:
+    std::mutex _queueMutex;
     std::condition_variable _queueClearCondition;
-
+    
 private:
     ILogger& _logger;
     std::queue<std::string> _logQueue;
-
+    
     std::vector<std::thread> _workers;
-    std::mutex _queueMutex;
     std::condition_variable _queueCondition;
-    std::atomic<bool> _stop = false;
+    std::atomic<bool> _isStop = false;
 };
 
 #endif

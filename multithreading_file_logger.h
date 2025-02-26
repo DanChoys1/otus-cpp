@@ -3,6 +3,7 @@
 
 #include "multithreading_logger.h"
 #include "file_logger.h"
+#include <iostream>
 
 class MultithreadingFileLogger : public MultithreadingLogger
 {
@@ -16,6 +17,12 @@ public:
         close();
     }
 
+    MultithreadingFileLogger& operator<< (const std::string& msg)
+    {
+        MultithreadingLogger::operator<< (msg);
+        return *this;
+    }
+
     bool open(const std::string& path)
     {
         close();
@@ -24,17 +31,15 @@ public:
 
     void close()
     {
-        std::unique_lock lock(_closeMutex);
-        while (!logQueueClear())        
-            _queueClearCondition.wait(lock, [this] { return logQueueClear(); });
-
+        std::unique_lock lock(_queueMutex);
+        while (!isLogQueueClear())        
+            _queueClearCondition.wait(lock, [this] { return isLogQueueClear(); });
+        
         _fileLogger.close();
     }
 
 private:
     FileLogger _fileLogger;
-
-    std::mutex _closeMutex;
 };
 
 #endif
