@@ -59,7 +59,7 @@ public:
 
     void insert(std::string path)
     {
-        if (insertPath(path))
+        if (insertFirstePath(path))
             return;
 
         File file(path, std::ios::binary);
@@ -77,8 +77,11 @@ private:
     MultidimensionalFileSet(std::size_t blockSize, File& file) :
         _blockSize(blockSize)
     {
-        if (insertPath(file.path()))
+        if (insertFirstePath(file.path()))
+        {
+            _filePos = file.tellg();
             return;
+        }
         insert(file);
     }
 
@@ -105,15 +108,19 @@ private:
 
             if (!_isEof)
             {
-                File file(std::move(_paths->front()), std::ios::binary);
-                _paths->pop_back();
-                insert(file);
+                File file2(std::move(_paths->front()), std::ios::binary);
+                file2.seekg(_filePos);
+                _paths.reset();
+                _filePos = 0;
+                insert(file2);
             }
         }
         else if (file.eof())
         {
             _isEof = true;
-            insertPath(file.path());
+            if (!_paths.has_value())
+                _paths.emplace();
+            _paths->emplace_back(file.path());
         }
         else
         {
@@ -121,7 +128,7 @@ private:
         }
     }
 
-    bool insertPath(std::string path)
+    bool insertFirstePath(std::string path)
     {
         if (!_paths.has_value())
         {
@@ -160,6 +167,7 @@ private:
     std::optional<std::unordered_map<uint32_t, MultidimensionalFileSet>> _nextNodes;
     std::optional<std::vector<std::string>> _paths;
     bool _isEof = false;
+    std::ifstream::pos_type _filePos = 0;
 };
 
 // std::vector<std::string> 
