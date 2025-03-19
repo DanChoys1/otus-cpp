@@ -253,7 +253,7 @@ int run(int argc, const char** argv)
         // size_t block_size = vm["block-size"].as<size_t>();
         // std::string algorithm = vm["algorithm"].as<std::string>();
 
-        auto files = getFiles({".\\123"}, {}, 100, 1, {});
+        auto files = getFiles({".\\test_dir"}, {}, 100, 1, {});
         for (const auto& file : files)
         {
             for (const auto& f : file)
