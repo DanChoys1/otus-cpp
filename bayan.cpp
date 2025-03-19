@@ -54,7 +54,7 @@ public:
     MultidimensionalFileSet() = default;
 
     MultidimensionalFileSet(std::size_t blockSize) :
-    _blockSize(blockSize)
+        _blockSize(blockSize)
     {}
 
     void insert(std::string path)
@@ -90,8 +90,18 @@ private:
         if (!file.is_open())
             throw "Не удалось открыть файл: " + file.path();
 
+        if (!_isEof && hasPaths())
+        {
+            File file2(std::move(_paths->front()), std::ios::binary);
+            file2.seekg(_filePos);
+            _paths.reset();
+            _filePos = 0;
+            insert(file2);
+        }
+
         std::vector<char> buffer(_blockSize, 0);
-        if (file.read(buffer.data(), _blockSize)) 
+        file.read(buffer.data(), _blockSize);
+        if (file.gcount() > 0) 
         {
             uint32_t blockHash = hash_block(buffer, "crc32");
 
@@ -105,54 +115,32 @@ private:
             if (!_nextNodes.has_value())
                 _nextNodes.emplace();
             (*_nextNodes)[blockHash] = MultidimensionalFileSet(_blockSize, file);
-
-            if (!_isEof)
-            {
-                File file2(std::move(_paths->front()), std::ios::binary);
-                file2.seekg(_filePos);
-                _paths.reset();
-                _filePos = 0;
-                insert(file2);
-            }
-        }
-        else if (file.eof())
-        {
-            _isEof = true;
-            if (!_paths.has_value())
-                _paths.emplace();
-            _paths->emplace_back(file.path());
         }
         else
         {
-            std::cout << "Some strange" << std::endl;
+            _isEof = true;
+            setPath(file.path());
         }
     }
 
     bool insertFirstePath(std::string path)
     {
-        if (!_paths.has_value())
-        {
-            _paths.emplace({std::move(path)});
-            return true;
-        }
-        if (_paths->empty())
-        {
-            _paths->emplace_back(std::move(path));
-            return true;
-        }
+        if (hasNextNodes() || hasPaths())
+            return false;
 
-        return false;
+        setPath(std::move(path));
+        return true;
     }
 
     void collectFiles(std::vector<std::vector<std::string>>& files)
     {
-        if (_paths.has_value())
+        if (hasPaths())
         {
             files.push_back(std::move(*_paths));
             _paths.reset();
             _isEof = false;
         }
-        if (_nextNodes.has_value())
+        if (hasNextNodes())
         {
             for (auto& node : *_nextNodes)
             {
@@ -160,6 +148,24 @@ private:
             }
             _nextNodes.reset();
         }
+    }
+
+    bool hasPaths() const 
+    {
+        return _paths.has_value() && !_paths->empty();
+    }
+
+    bool hasNextNodes() const 
+    {
+        return _nextNodes.has_value() && !_nextNodes->empty();
+    }
+
+    void setPath(std::string path)
+    {
+        if (!_paths.has_value())
+            _paths.emplace({std::move(path)});
+        else
+            _paths->emplace_back(std::move(path));
     }
 
 private:
