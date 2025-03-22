@@ -12,12 +12,11 @@
 #include <unordered_set>
 
 using namespace std;
-namespace fs = boost::filesystem;
 
 namespace
 {
 
-uint32_t hash_block(const vector<char>& block, HashAlgo hashAlgo) 
+std::string hashBlock(const std::vector<char>& block, HashAlgo hashAlgo) 
 {
     switch (hashAlgo)
     {
@@ -25,7 +24,9 @@ uint32_t hash_block(const vector<char>& block, HashAlgo hashAlgo)
     {
         boost::crc_32_type result;
         result.process_bytes(block.data(), block.size());
-        return result.checksum();
+        uint32_t digest = result.checksum();
+        const auto char_digest = reinterpret_cast<const char*>(&digest);
+        return std::string(char_digest, char_digest + sizeof(digest));
     }
     case HashAlgo::MD5:
     {
@@ -34,7 +35,7 @@ uint32_t hash_block(const vector<char>& block, HashAlgo hashAlgo)
         hash.process_bytes(block.data(), block.size());
         hash.get_digest(digest);
         const auto char_digest = reinterpret_cast<const char*>(&digest);
-        return string(char_digest, char_digest + sizeof(boost::uuids::detail::md5::digest_type));
+        return std::string(char_digest, char_digest + sizeof(boost::uuids::detail::md5::digest_type));
     }
     };
     return 0;
@@ -42,45 +43,45 @@ uint32_t hash_block(const vector<char>& block, HashAlgo hashAlgo)
 
 class MultidimensionalFileSet
 {
-    class File : public ifstream
+    class File : public std::ifstream
     {
     public:
-        File(const string& path, ios::openmode ios) :
-            ifstream(path, ios), _path(path)
+        File(const std::string& path, std::ios::openmode ios) :
+        std::ifstream(path, ios), _path(path)
         {}
 
-        string path() const { return _path; }
+        std::string path() const { return _path; }
 
     private:
-        string _path;
+        std::string _path;
     };
 
 public:
     MultidimensionalFileSet() = default;
 
-    MultidimensionalFileSet(size_t blockSize) :
-        _blockSize(blockSize)
+    MultidimensionalFileSet(size_t blockSize, HashAlgo hashAlgo) :
+        _blockSize(blockSize), _hashAlgo(hashAlgo)
     {}
 
-    void insert(string path)
+    void insert(std::string path)
     {
         if (insertFirstePath(path))
             return;
 
-        File file(path, ios::binary);
+        File file(path, std::ios::binary);
         insert(file);
     }
 
-    vector<vector<string>> files()
+    std::vector<std::vector<std::string>> files()
     {
-        vector<vector<string>> f;
+        std::vector<std::vector<std::string>> f;
         collectFiles(f);
         return f;
     }
 
 private:
-    MultidimensionalFileSet(size_t blockSize, File& file) :
-        _blockSize(blockSize)
+    MultidimensionalFileSet(size_t blockSize, HashAlgo hashAlgo, File& file) :
+        _blockSize(blockSize), _hashAlgo(hashAlgo)
     {
         if (insertFirstePath(file.path()))
         {
@@ -97,18 +98,18 @@ private:
 
         if (!_isEof && hasPaths())
         {
-            File file2(move(_paths->front()), ios::binary);
+            File file2(std::move(_paths->front()), std::ios::binary);
             file2.seekg(_filePos);
             _paths.reset();
             _filePos = 0;
             insert(file2);
         }
 
-        vector<char> buffer(_blockSize, 0);
+        std::vector<char> buffer(_blockSize, 0);
         file.read(buffer.data(), _blockSize);
         if (file.gcount() > 0) 
         {
-            uint32_t blockHash = hash_block(buffer, "crc32");
+            std::string blockHash = hashBlock(buffer, _hashAlgo);
 
             if (_nextNodes.has_value() && _nextNodes->count(blockHash) != 0)
             {
@@ -119,7 +120,7 @@ private:
 
             if (!_nextNodes.has_value())
                 _nextNodes.emplace();
-            (*_nextNodes)[blockHash] = MultidimensionalFileSet(_blockSize, file);
+            (*_nextNodes)[blockHash] = MultidimensionalFileSet(_blockSize, _hashAlgo, file);
         }
         else
         {
@@ -128,20 +129,20 @@ private:
         }
     }
 
-    bool insertFirstePath(string path)
+    bool insertFirstePath(std::string path)
     {
         if (hasNextNodes() || hasPaths())
             return false;
 
-        setPath(move(path));
+        setPath(std::move(path));
         return true;
     }
 
-    void collectFiles(vector<vector<string>>& files)
+    void collectFiles(std::vector<std::vector<std::string>>& files)
     {
         if (hasPaths())
         {
-            files.push_back(move(*_paths));
+            files.push_back(std::move(*_paths));
             _paths.reset();
             _isEof = false;
         }
@@ -165,7 +166,7 @@ private:
         return _nextNodes.has_value() && !_nextNodes->empty();
     }
 
-    void setPath(string path)
+    void setPath(std::string path)
     {
         if (!_paths.has_value())
             _paths.emplace({move(path)});
@@ -175,16 +176,17 @@ private:
 
 private:
     size_t _blockSize = 0;
-    optional<unordered_map<uint32_t, MultidimensionalFileSet>> _nextNodes;
-    optional<vector<string>> _paths;
+    HashAlgo _hashAlgo = HashAlgo::CRC32;
+    std::optional<std::unordered_map<std::string, MultidimensionalFileSet>> _nextNodes;
+    std::optional<std::vector<std::string>> _paths;
     bool _isEof = false;
-    ifstream::pos_type _filePos = 0;
+    std::ifstream::pos_type _filePos = 0;
 };
 
 }
 
-vector<vector<string>> getFiles(const vector<fs::path>& directories, const vector<fs::path>& exclude_dirs,
-                                    int scan_level, size_t min_file_size, const vector<string>& masks, size_t block_size, HashAlgo hashAlgo) 
+std::vector<std::vector<std::string>> getFiles(const std::vector<fs::path>& directories, const std::vector<fs::path>& exclude_dirs,
+                                    int scan_level, size_t min_file_size, const std::vector<std::string>& masks, size_t block_size, HashAlgo hashAlgo) 
 {
     MultidimensionalFileSet mFileSet(block_size, hashAlgo);
 
@@ -198,16 +200,17 @@ vector<vector<string>> getFiles(const vector<fs::path>& directories, const vecto
         while (it != end) 
         {
             namespace algo = boost::algorithm;
-            if (it.depth() > scan_level || !algo::contains(exclude_dirs, it->path())) 
+            if (it.depth() > scan_level || algo::contains(exclude_dirs, it->path())) 
             {
                 it.disable_recursion_pending();
             }
             else if (fs::is_regular_file(*it) && fs::file_size(*it) >= min_file_size) 
             {
                 const fs::path& path = it->path();
-                bool isMatch = algo::any_of(masks, bind(algo::iends_with<string, string>, 
-                                                                path.filename().string(), 
-                                                                placeholders::_1));
+                bool isMatch = algo::any_of(masks, [name = path.filename().string()](const std::string& mask)
+                {
+                    return algo::iends_with(name, mask);
+                });
                 if (masks.empty() || isMatch)
                     mFileSet.insert(path.string());
             }

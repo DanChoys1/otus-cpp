@@ -11,11 +11,11 @@ int main(int argc, const char** argv)
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "produce help message")
-        ("directories,d", po::value<vector<fs::path>>()->multitoken()->default_value({"."}), "directories to scan")
-        ("exclude,e", po::value<vector<fs::path>>()->multitoken()->default_value({}), "directories to exclude from scanning")
+        ("directories,d", po::value<vector<fs::path>>()->multitoken()->default_value({"."}, ""), "directories to scan")
+        ("exclude,e", po::value<vector<fs::path>>()->multitoken()->default_value({}, ""), "directories to exclude from scanning")
         ("level,l", po::value<int>()->default_value(0), "scan level (0 - only specified directory)")
         ("min-size,m", po::value<size_t>()->default_value(1), "minimum file size")
-        ("masks,k", po::value<vector<string>>()->multitoken()->default_value({}), "file name masks")
+        ("masks,k", po::value<vector<string>>()->multitoken()->default_value({}, ""), "file name masks")
         ("block-size,b", po::value<size_t>()->default_value(5), "block size for reading files")
         ("algorithm,a", po::value<string>()->default_value("crc32"), "hashing algorithm (crc32, md5)");
 
