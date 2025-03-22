@@ -3,7 +3,38 @@
 #include <vector>
 #include <string>
 
-std::vector<boost::filesystem::path> get_files(const std::vector<boost::filesystem::path>& directories, const std::vector<boost::filesystem::path>& exclude_dirs, int scan_level, size_t min_file_size, const std::vector<std::string>& masks);
-std::vector<std::string> hash_file(const boost::filesystem::path& path, size_t block_size, const std::string& algorithm);
-void find_duplicates(const std::vector<boost::filesystem::path>& files, size_t block_size, const std::string& algorithm);
-int run(int argc, const char** argv);
+class HashAlgoConverter
+{
+public:
+    enum class HashAlgo
+    {
+        CRC32,
+        MD5,
+    };
+
+    static HashAlgo fromStr(const string& hashName)
+    {
+        return hashAlgoMap[hashName];
+    }
+
+    static bool isContains(const string& hashName)
+    {
+        hashAlgoMap.count(hashName) != 0;
+    }
+
+private:
+    inline static unordered_map<string, HashAlgo> hashAlgoMap
+    {
+        { "crc32", HashAlgo::CRC32 },
+        { "md5", HashAlgo::MD5 },
+    };
+};
+using HashAlgo = HashAlgoConverter::HashAlgo;
+
+vector<vector<string>> getFiles(const vector<fs::path>& directories, 
+                                const vector<fs::path>& exclude_dirs,
+                                int scan_level, 
+                                size_t min_file_size, 
+                                const vector<string>& masks, 
+                                size_t block_size, 
+                                HashAlgo hashAlgo);
