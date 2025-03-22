@@ -7,7 +7,7 @@ project(bayan VERSION ${PROJECT_VERSION})
 
 file(GLOB PROJECT_SOURCES CONFIGURE_DEPENDS *.h *.cpp)
 
-find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options system)
 
 add_executable(bayan main.cpp bayan.cpp)
 
