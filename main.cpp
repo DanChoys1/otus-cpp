@@ -1,28 +1,27 @@
-#include "async.h"
+#include "bulk_server.cpp"
 
 #include <iostream>
 #include <sstream>
+#include <boost/asio.hpp>
 
-int main()
-{
-    // std::stringstream stream("a\nd\nf\ns\n");
-    // std::string line;
-    // while(std::getline(stream, line))
-    // {
-    //     std::cout << line;
+int main(int argc, char* argv[]) {
+    // if (argc != 3) {
+    //     std::cerr << "Usage: bulk_server <port> <bulk_size>\n";
+    //     return 1;
     // }
 
-    std::size_t bulk = 5;
-    auto h1 = async::connect(bulk);
-    auto h2 = async::connect(bulk);
+    try {
+        boost::asio::io_context io_context;
+        // short port = std::stoi(argv[1]);
+        // std::size_t bulk_size = std::stoul(argv[2]);
 
-    async::receive(h1, "1", 1);
-    async::receive(h2, "A\n", 2);
-    async::receive(h1, "\n2\n3\n4\n5\n6\n{\na\n", 15);
-    async::receive(h1, "b\nc\nd\n}\n89\n", 11);
-
-    async::disconnect(h1);
-    async::disconnect(h2);
+        // Server server(io_context, port, bulk_size);
+        Server server(io_context, 9000, 3);
+        io_context.run();
+        // std::this_thread::sleep_for(std::chrono::seconds(100000));
+    } catch (std::exception& e) {
+        std::cerr << "Exception: " << e.what() << "\n";
+    }
 
     return 0;
 }
