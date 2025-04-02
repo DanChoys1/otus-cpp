@@ -16,9 +16,7 @@ public:
         : _socket(std::move(socket)),
           _parser(parser),
           _dynamicBlockFlag(dynamicBlockFlag) 
-    {
-        std::cout << "new session";
-    }
+    {}
 
     void start() { doRead(); }
 
