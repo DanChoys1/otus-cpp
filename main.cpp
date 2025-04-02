@@ -3,6 +3,12 @@
 
 int main(int argc, char* argv[])
 {
+    if (argc < 3)
+    {
+        std::cerr << "Usage: bulk_server <port> <bulk_size>\n";
+        return 1;
+    }
+
     try
     {
         boost::asio::io_context ioContext;
