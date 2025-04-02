@@ -15,22 +15,46 @@ public:
 
     void parse(std::istream& stream)
     {
-        std::string line;
-        while(std::getline(stream, line))
+        std::string command;
+        while(std::getline(stream, command))
         {
-            if (line == "{")
+            if (isDynamicStartCommand(command))
                 newDynamicBlock();
-            else if (line == "}")
+            else if (isDynamicEndCommand(command))
                 endDynamicBlock();
             else
-                newCommand(line);
+                newCommand(command);
         }
+    }
+
+    void parse(std::string& command)
+    {
+        if (command == "{")
+            newDynamicBlock();
+        else if (command == "}")
+            endDynamicBlock();
+        else
+            newCommand(command);
     }
 
     void endParsing()
     {
         if (_commBuff->count() > 0 && _dynamicBlocks == 0)
             _commBuff->execut();
+    }
+
+    bool isDynamicBlockProcessing() const
+    {
+        return _dynamicBlocks > 0;
+    }
+
+    bool isDynamicStartCommand(const std::string& command)
+    {
+        return command == "{";
+    }
+    bool isDynamicEndCommand(const std::string& command)
+    {
+        return command == "}";
     }
 
 private:

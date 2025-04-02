@@ -7,10 +7,10 @@ project(bulk_server VERSION ${PROJECT_VERSION})
 
 FILE(GLOB PROJECT_SOURCES *.h *.cpp)
 
-add_executable(bulk_server main.cpp)
+add_executable(bulk_server ${PROJECT_SOURCES})
 
 set_target_properties(bulk_server PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
 

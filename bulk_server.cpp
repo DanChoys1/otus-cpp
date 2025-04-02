@@ -1,73 +1,94 @@
-#include <boost/asio.hpp>
+#include "bulk_server.h"
+
 #include <iostream>
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <mutex>
+#include <sstream>
+#include <atomic>
 #include "command_parser.h"
 #include "command_buffer.h"
 #include "command_logger.h"
 
-using boost::asio::ip::tcp;
-
-class Session : public std::enable_shared_from_this<Session> {
+namespace
+{
+class Session : public std::enable_shared_from_this<Session>
+{
 public:
-    Session(tcp::socket socket, std::shared_ptr<CommandsParser> parser)
-        : socket_(std::move(socket)), parser_(std::move(parser)) {}
-
-    void start() {
-        do_read();
+    Session(tcp::socket socket, std::shared_ptr<CommandsParser> parser, std::atomic_flag& dynamicBlockFlag)
+        : _socket(std::move(socket)),
+          _parser(parser),
+          _dynamicBlockFlag(dynamicBlockFlag) 
+    {
+        std::cout << "new session";
     }
 
+    void start() { doRead(); }
+
 private:
-    void do_read() {
+    void doRead()
+    {
         auto self(shared_from_this());
-        socket_.async_read_some(boost::asio::buffer(data_, max_length),
-            [this, self](boost::system::error_code ec, std::size_t length) {
-                if (!ec) {
-                    std::string input(data_, length);
-                    std::lock_guard<std::mutex> lock(session_mutex_);
-                    std::stringstream stream(input);
-                    parser_->parse(stream);
-                    do_read();
-                } else {
-                    // Log error and end parsing
-                    if (ec != boost::asio::error::eof) {
-                        std::cerr << "Error: " << ec.message() << "\n";
-                    }
-                    std::lock_guard<std::mutex> lock(session_mutex_);
-                    parser_->endParsing();
+        boost::asio::async_read_until(_socket, _buffer, '\n',
+            [this, self](boost::system::error_code ec, std::size_t /*length*/)
+            {
+                if (ec)
+                {
+                    if (ec != boost::asio::error::eof)
+                        std::cerr << ec.message() << std::endl;
+                    _parser->endParsing();
+                    return;
                 }
+
+                std::istream stream(&_buffer);
+                std::string input;
+                while (std::getline(stream, input))
+                {
+                    if (_parser->isDynamicStartCommand(input))
+                    {
+                        do
+                        {
+                            _dynamicBlockFlag.wait(false);
+                        } 
+                        while (_dynamicBlockFlag.test_and_set());
+                    }
+                    else if (_parser->isDynamicEndCommand(input))
+                    {
+                        _dynamicBlockFlag.clear(std::memory_order_release);
+                        _dynamicBlockFlag.notify_all();
+                    }
+
+                    _parser->parse(input);
+                }
+
+                doRead();
             });
-    }
-
-    tcp::socket socket_;
-    std::shared_ptr<CommandsParser> parser_;
-    enum { max_length = 1024 };
-    char data_[max_length];
-    std::mutex session_mutex_; // Mutex for this session
-};
-
-class Server {
-public:
-    Server(boost::asio::io_context& io_context, short port, std::size_t bulk_size)
-        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
-          parser_(std::make_shared<CommandsParser>(
-              std::make_shared<CommandBuffer>(std::make_shared<CommandLogger>()), bulk_size)) {
-        do_accept();
     }
 
 private:
-    void do_accept() {
-        acceptor_.async_accept(
-            [this](boost::system::error_code ec, tcp::socket socket) {
-                if (!ec) {
-                    std::make_shared<Session>(std::move(socket), parser_)->start();
-                }
-                do_accept();
-            });
-    }
-
-    tcp::acceptor acceptor_;
-    std::shared_ptr<CommandsParser> parser_;
+    tcp::socket _socket;
+    std::shared_ptr<CommandsParser> _parser;
+    boost::asio::streambuf _buffer;
+    std::atomic_flag& _dynamicBlockFlag;
 };
+
+}
+
+Server::Server(boost::asio::io_context& ioContext, int port, std::size_t bulkSize)
+    : _acceptor(ioContext, tcp::endpoint(tcp::v4(), port)),
+        _parser(std::make_shared<CommandsParser>(
+                    std::make_shared<CommandBuffer>(
+                        std::make_shared<CommandLogger>()), 
+                bulkSize))
+{
+    _dynamicBlockFlag.clear();
+    doAccept();
+}
+
+void Server::doAccept()
+{
+    _acceptor.async_accept(
+        [this](boost::system::error_code ec, tcp::socket socket)
+        {
+            if (!ec)
+                std::make_shared<Session>(std::move(socket), _parser, _dynamicBlockFlag)->start();
+            doAccept();
+        });
+}
