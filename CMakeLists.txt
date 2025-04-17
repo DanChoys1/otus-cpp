@@ -3,33 +3,33 @@ cmake_minimum_required(VERSION 3.20)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(bulk_server VERSION ${PROJECT_VERSION})
+project(orm VERSION ${PROJECT_VERSION})
 
-FILE(GLOB PROJECT_SOURCES *.h *.cpp)
+FILE(GLOB PROJECT_SOURCES *.h *.cpp orm/*.h orm/*.cpp)
 
-add_executable(bulk_server ${PROJECT_SOURCES})
+# find_package(SQLite3 REQUIRED)
 
-set_target_properties(bulk_server PROPERTIES
+add_executable(orm ${PROJECT_SOURCES})
+
+set_target_properties(orm PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
 )
 
-find_package(Boost REQUIRED COMPONENTS system)
-
-target_include_directories(bulk_server PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(bulk_server PRIVATE ${Boost_LIBRARIES})
+target_include_directories(orm PRIVATE orm)
+# target_link_libraries(orm PRIVATE SQLite::SQLite3)
 
 if (MSVC)
-    target_compile_options(bulk_server PRIVATE
-        /W4
+    target_compile_options(orm PRIVATE
+        /W4 /Zc:preprocessor
     )
 else ()
-    target_compile_options(bulk_server PRIVATE
+    target_compile_options(orm PRIVATE
         -Wall -Wextra -pedantic -Werror
     )
 endif()
 
-install(TARGETS bulk_server RUNTIME DESTINATION bin)
+install(TARGETS orm RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_CONTACT example@example.com)
